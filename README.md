@@ -33,12 +33,17 @@ Don’t expect much support, but if you have cool ideas, feel free to open a pul
 Note: I didn’t write all of this myself, I just needed a quick solution, and all the other ones out there weren’t quite right.
 
 ## Testing
-first clone the repo
-- add instructions
+Make sure you have git installed
+
+Then clone the repo
+```bash
+git clone https://github.com/Shlok-Bhakta/yapper.git
+cd yapper
+```
+### General
 then make sure to have python 3.12 installed with your distros package manager or [their website](https://www.python.org/downloads/release/python-3120/)
 
-- add instructions
-go install [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp) then run
+install [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp) then run
 ```bash
 whisper-cpp-download-ggml-model base.en
 ```
@@ -46,6 +51,13 @@ This will download the model to your machine in the current dir that the command
 ```bash
 python yapper.py
 ```
+### Nix OS
+run
+```bash
+nix-shell
+```
+and you are all setup! (nix ftw)
+
 ## License
 
 MIT License. See the [LICENSE](LICENSE) file for more information.
