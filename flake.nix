@@ -24,6 +24,9 @@
           fi
         '';
 
+        whisperWithCuda = pkgs.openai-whisper-cpp.override {
+          cudaSupport = true;
+        };
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
@@ -38,16 +41,13 @@
           ];
 
           buildInputs = [
-            pkgs.openai-whisper-cpp
-            pkgs.dotool
+            pkgs.python312
+            whisperWithCuda
+            pkgs.wtype
             pkgs.gtk4
             pkgs.gobject-introspection
             pkgs.gtk4.dev
-            pkgs.python312
             pkgs.python312Packages.pygobject3
-            pkgs.graphene
-            pkgs.glib           # Ensure glib is included for GObject dependencies
-            setupScript
           ];
 
           installPhase = ''
@@ -67,11 +67,6 @@
             #!/usr/bin/env bash
             yapper-setup
             
-            export WHISPER_MODEL="\$HOME/.local/share/yapper/ggml-base.en.bin"
-            export GI_TYPELIB_PATH="${pkgs.gtk4}/lib/girepository-1.0:${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.graphene}/lib/girepository-1.0:\$GI_TYPELIB_PATH"
-            export LD_LIBRARY_PATH="${pkgs.gtk4}/lib:${pkgs.gtk4.dev}/lib:${pkgs.glib}/lib:${pkgs.graphene}/lib:\$LD_LIBRARY_PATH"
-            export XDG_DATA_DIRS="${pkgs.gtk4}/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:\$XDG_DATA_DIRS"
-            
             ${pkgs.python312}/bin/python $out/share/yapper/yapper.py
             EOF
             chmod +x $out/bin/yapper
@@ -89,34 +84,10 @@
             Categories=Audio;Utility;Transcription;
             Keywords=audio;transcription;whisper;speech;
             EOF
-
-            # Wrap the setup script
-            makeWrapper ${setupScript}/bin/yapper-setup $out/bin/yapper-setup \
-                --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp ]}
-
-            # Wrap the main script with additional environment variables
-            wrapProgram $out/bin/yapper \
-                --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
-                --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
-                --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
-                --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
-                --prefix GI_TYPELIB_PATH : "${pkgs.gobject-introspection}/lib/girepository-1.0" \
-                --prefix GI_TYPELIB_PATH : "${pkgs.glib}/lib/girepository-1.0" \
-                --prefix LD_LIBRARY_PATH : "${pkgs.gtk4}/lib" \
-                --prefix LD_LIBRARY_PATH : "${pkgs.gtk4.dev}/lib" \
-                --prefix LD_LIBRARY_PATH : "${pkgs.glib}/lib" \
-                --prefix XDG_DATA_DIRS : "${pkgs.gtk4}/share" \
-                --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
-                --set PYTHONPATH "${pkgs.python312Packages.pygobject3}/${pkgs.python312.sitePackages}:$PYTHONPATH"
           '';
 
           meta = with pkgs.lib; {
             description = "A Python-based audio transcription application using whisper.cpp";
-            longDescription = ''
-              Yapper is a simple audio transcription tool that uses whisper.cpp
-              for efficient, offline speech recognition. It provides both a
-              command-line interface and a GTK-based graphical interface.
-            '';
             homepage = "https://github.com/Shlok-Bhakta/yapper";
             license = licenses.mit;
             platforms = platforms.linux;
