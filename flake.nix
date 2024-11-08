@@ -12,7 +12,10 @@
         pkgs = nixpkgs.legacyPackages.${system};
         
         pythonEnv = pkgs.python312.withPackages (ps: with ps; [
-          pygobject3
+          (pkgs.python312Packages.pygobject3.override {
+            enableCairo = true;
+          })
+          pkgs.python312Packages.pycairo
         ]);
 
         # Create a wrapper script that handles first-time setup
@@ -48,6 +51,9 @@
             pkgs.gtk4
             pkgs.gobject-introspection
             pkgs.gtk4.dev
+            pkgs.graphene
+            pkgs.pango
+            pkgs.librsvg
             setupScript
           ];
 
@@ -102,7 +108,10 @@
             wrapProgram $out/bin/yapper \
               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
-              --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0"
+              --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
+              --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
+              --prefix GI_TYPELIB_PATH : "${pkgs.pango}/lib/girepository-1.0" \
+              --set GDK_PIXBUF_MODULE_FILE "${pkgs.librsvg}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
           '';
 
           meta = with pkgs.lib; {
