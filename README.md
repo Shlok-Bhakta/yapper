@@ -26,6 +26,8 @@ In the end, you have your thoughts and ideas—just dictated instead of typed ou
 
 Since I’m on NixOS, I’ll leave a guide for how to install this on NixOS here. If you want to style it like mine, I’ve set it up with the Catppuccin theme. I’ll figure out how to share that too.
 
+This is currently on the backburner, building this thing has made me want to oof myself so if anyone can figure out how to make this installation work please lmk!
+
 ## Contributing
 
 Don’t expect much support, but if you have cool ideas, feel free to open a pull request. I am open to contributions and excited to see if anyone actually contributes to this project. If you do, feel free to give it a star! 😄
@@ -40,7 +42,7 @@ Then clone the repo
 git clone https://github.com/Shlok-Bhakta/yapper.git
 cd yapper
 ```
-### General
+### General (UNTESTED)
 then make sure to have python 3.12 installed with your distros package manager or [their website](https://www.python.org/downloads/release/python-3120/)
 
 install [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp) then run
@@ -56,7 +58,16 @@ run
 ```bash
 nix-shell
 ```
-and you are all setup! (nix ftw)
+
+run
+```bash
+whisper-cpp-download-ggml-model base.en
+```
+This will download the model to your machine in the current dir that the command was run
+```bash
+python yapper.py
+```
+
 
 ## License
 
