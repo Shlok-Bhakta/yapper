@@ -38,18 +38,16 @@
           ];
 
         buildInputs = [
-        pkgs.openai-whisper-cpp
-        pkgs.dotool
-        pkgs.gtk4
-        pkgs.gobject-introspection
-        pkgs.gtk4.dev
-        pkgs.python312
-        pkgs.openai-whisper-cpp
-        pkgs.python312Packages.pygobject3
-        pkgs.gsettings-desktop-schemas  # Add this line
-        setupScript
+            pkgs.openai-whisper-cpp
+            pkgs.dotool
+            pkgs.gtk4
+            pkgs.gobject-introspection
+            pkgs.gtk4.dev
+            pkgs.python312
+            pkgs.python312Packages.pygobject3
+            pkgs.graphene  # Add this line
+            setupScript
         ];
-
           installPhase = ''
             # Create necessary directories
             mkdir -p $out/bin
@@ -107,6 +105,7 @@
                 --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
                 --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
                 --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
+                --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4}/lib" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4.dev}/lib" \
                 --prefix XDG_DATA_DIRS : "${pkgs.gtk4}/share" \
