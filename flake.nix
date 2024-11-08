@@ -74,7 +74,7 @@
             export WHISPER_MODEL="\$HOME/.local/share/yapper/ggml-base.en.bin"
             
             # Run the actual program
-            ${pythonEnv}/bin/python $out/share/yapper/yapper.py
+            ${pkgs.python312}/bin/python $out/share/yapper/yapper.py
             EOF
             chmod +x $out/bin/yapper
 
@@ -115,24 +115,6 @@
             platforms = platforms.linux;
             maintainers = with maintainers; [ "Shlok Bhakta" ];
           };
-        };
-
-        devShells.default = pkgs.mkShell {
-          name = "yapper";
-          buildInputs = [
-            pythonEnv
-            pkgs.openai-whisper-cpp
-            pkgs.dotool
-            pkgs.gtk4
-            pkgs.gobject-introspection
-            pkgs.gtk4.dev
-          ];
-          
-          shellHook = ''
-            echo "Welcome to the yapper development environment!"
-            echo "Python 3.12 and all necessary libraries for Whisper, GTK, and ydotool are ready to go."
-            zsh
-          '';
         };
       }
     );
