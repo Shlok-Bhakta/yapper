@@ -31,7 +31,7 @@ def type_text(text):
     if not text.strip():
         return
     try:
-        cmd = f'echo type "{text}" | dotool'
+        cmd = f'wtype "{text}"'
         subprocess.run(['sh', '-c', cmd], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error using dotool: {e}")
@@ -40,7 +40,7 @@ def transcribe_audio(mic_id, stop_flag):
     """Run whisper-cpp-stream with the selected microphone and clean output."""
     global is_transcribing, whisper_process
     try:
-        command = ["whisper-cpp-stream", "-m", MODEL_PATH, "-c", str(mic_id), "-mt", "128"]
+        command = ["whisper-cpp-stream", "-m", MODEL_PATH, "-c", str(mic_id)]
         whisper_process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
         for line in whisper_process.stdout:
             if stop_flag.value:
