@@ -52,18 +52,20 @@
             
             # Install icons
             cp yapper-icon.svg $out/share/icons/hicolor/scalable/apps/yapper.svg
-            convert yapper-icon.svg -resize 256x256 $out/share/icons/hicolor/256x256/apps/yapper.png
+            ${pkgs.imagemagick}/bin/convert yapper-icon.svg -resize 256x256 $out/share/icons/hicolor/256x256/apps/yapper.png
 
             # Create desktop entry
             cat > $out/share/applications/yapper.desktop << EOF
             [Desktop Entry]
+            Version=1.0
+            Type=Application
             Name=Yapper
             Comment=Audio Transcription Tool
             Exec=yapper
             Icon=yapper
             Terminal=false
-            Type=Application
             Categories=Audio;Utility;Transcription;
+            Keywords=audio;transcription;whisper;speech;
             EOF
             
             # Create wrapper script
@@ -73,12 +75,22 @@
               --set WHISPER_MODEL "$out/share/yapper/base.en.bin" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0"
+
+            # Make the wrapper script executable
+            chmod +x $out/bin/yapper
           '';
 
           meta = with pkgs.lib; {
-            description = "A Python-based audio transcription application";
+            description = "A Python-based audio transcription application using whisper.cpp";
+            longDescription = ''
+              Yapper is a simple audio transcription tool that uses whisper.cpp
+              for efficient, offline speech recognition. It provides both a
+              command-line interface and a GTK-based graphical interface.
+            '';
+            homepage = "https://github.com/Shlok-Bhakta/yapper";
             license = licenses.mit;  # Adjust according to your license
             platforms = platforms.linux;
+            maintainers = with maintainers; [ /* add your maintainer name here */ ];
           };
         };
 
@@ -92,6 +104,12 @@
             pkgs.gobject-introspection
             pkgs.gtk4.dev
           ];
+          
+          shellHook = ''
+            echo "Welcome to the yapper development environment!"
+            echo "Python 3.12 and all necessary libraries for Whisper, GTK, and ydotool are ready to go."
+            zsh
+          '';
         };
       }
     );
