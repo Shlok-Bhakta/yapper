@@ -40,7 +40,7 @@ def transcribe_audio(mic_id, stop_flag):
     """Run whisper-cpp-stream with the selected microphone and clean output."""
     global is_transcribing, whisper_process
     try:
-        command = ["whisper-cpp-stream", "-m", MODEL_PATH, "-c", str(mic_id), "-mt", "128", "-t", "12"]
+        command = ["whisper-cpp-stream", "-m", MODEL_PATH, "-c", str(mic_id), "-mt", "128"]
         whisper_process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
         for line in whisper_process.stdout:
             if stop_flag.value:
