@@ -2,7 +2,7 @@
   description = "Yapper - A Python-based transcription application";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
