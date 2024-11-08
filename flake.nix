@@ -45,7 +45,7 @@
             
             # Download the model during build
             ${pkgs.openai-whisper-cpp}/bin/whisper-cpp-download-ggml-model base.en
-            mv base.en.bin $out/share/yapper/
+            mv ggml-base.en.bin $out/share/yapper/
 
             # Install the Python script
             cp yapper.py $out/share/yapper/
@@ -72,7 +72,7 @@
             makeWrapper ${pythonEnv}/bin/python $out/bin/yapper \
               --add-flags "$out/share/yapper/yapper.py" \
               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
-              --set WHISPER_MODEL "$out/share/yapper/base.en.bin" \
+              --set WHISPER_MODEL "$out/share/yapper/ggml-base.en.bin" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0"
 
