@@ -34,6 +34,7 @@
           nativeBuildInputs = [
             pkgs.makeWrapper
             pkgs.imagemagick
+            pkgs.gobject-introspection
           ];
 
           buildInputs = [
@@ -45,6 +46,7 @@
             pkgs.python312
             pkgs.python312Packages.pygobject3
             pkgs.graphene
+            pkgs.glib           # Ensure glib is included for GObject dependencies
             setupScript
           ];
 
@@ -66,8 +68,8 @@
             yapper-setup
             
             export WHISPER_MODEL="\$HOME/.local/share/yapper/ggml-base.en.bin"
-            export GI_TYPELIB_PATH="${pkgs.gtk4}/lib/girepository-1.0:${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gtk4.dev}/lib/girepository-1.0:${pkgs.graphene}/lib/girepository-1.0:\$GI_TYPELIB_PATH"
-            export LD_LIBRARY_PATH="${pkgs.gtk4}/lib:${pkgs.gtk4.dev}/lib:${pkgs.gobject-introspection}/lib:${pkgs.graphene}/lib:\$LD_LIBRARY_PATH"
+            export GI_TYPELIB_PATH="${pkgs.gtk4}/lib/girepository-1.0:${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.graphene}/lib/girepository-1.0:\$GI_TYPELIB_PATH"
+            export LD_LIBRARY_PATH="${pkgs.gtk4}/lib:${pkgs.gtk4.dev}/lib:${pkgs.glib}/lib:${pkgs.graphene}/lib:\$LD_LIBRARY_PATH"
             export XDG_DATA_DIRS="${pkgs.gtk4}/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:\$XDG_DATA_DIRS"
             
             ${pkgs.python312}/bin/python $out/share/yapper/yapper.py
@@ -99,8 +101,10 @@
                 --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
                 --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
                 --prefix GI_TYPELIB_PATH : "${pkgs.gobject-introspection}/lib/girepository-1.0" \
+                --prefix GI_TYPELIB_PATH : "${pkgs.glib}/lib/girepository-1.0" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4}/lib" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4.dev}/lib" \
+                --prefix LD_LIBRARY_PATH : "${pkgs.glib}/lib" \
                 --prefix XDG_DATA_DIRS : "${pkgs.gtk4}/share" \
                 --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
                 --set PYTHONPATH "${pkgs.python312Packages.pygobject3}/${pkgs.python312.sitePackages}:$PYTHONPATH"
