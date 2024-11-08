@@ -12,23 +12,20 @@
         pkgs = nixpkgs.legacyPackages.${system};
         
         pythonEnv = pkgs.python312.withPackages (ps: with ps; [
-          (pkgs.python312Packages.pygobject3.override {
-            enableCairo = true;
-          })
-          pkgs.python312Packages.pycairo
+          pygobject3
         ]);
 
         # Create a wrapper script that handles first-time setup
         setupScript = pkgs.writeScriptBin "yapper-setup" ''
           #!/usr/bin/env bash
           MODEL_DIR="$HOME/.local/share/yapper"
-          MODEL_PATH="$MODEL_DIR/base.en.bin"
+          MODEL_PATH="$MODEL_DIR/ggml-base.en.bin"
           
           if [ ! -f "$MODEL_PATH" ]; then
             echo "Downloading Whisper model for first-time setup..."
             mkdir -p "$MODEL_DIR"
             ${pkgs.openai-whisper-cpp}/bin/whisper-cpp-download-ggml-model base.en
-            mv base.en.bin "$MODEL_PATH"
+            mv ggml-base.en.bin "$MODEL_PATH"
           fi
         '';
 
@@ -51,9 +48,6 @@
             pkgs.gtk4
             pkgs.gobject-introspection
             pkgs.gtk4.dev
-            pkgs.graphene
-            pkgs.pango
-            pkgs.librsvg
             setupScript
           ];
 
@@ -79,7 +73,7 @@
             yapper-setup
             
             # Set model path
-            export WHISPER_MODEL="\$HOME/.local/share/yapper/base.en.bin"
+            export WHISPER_MODEL="\$HOME/.local/share/yapper/ggml-base.en.bin"
             
             # Run the actual program
             ${pythonEnv}/bin/python $out/share/yapper/yapper.py
@@ -108,10 +102,7 @@
             wrapProgram $out/bin/yapper \
               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
-              --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
-              --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
-              --prefix GI_TYPELIB_PATH : "${pkgs.pango}/lib/girepository-1.0" \
-              --set GDK_PIXBUF_MODULE_FILE "${pkgs.librsvg}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+              --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0"
           '';
 
           meta = with pkgs.lib; {
