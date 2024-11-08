@@ -10,10 +10,6 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        
-        pythonEnv = pkgs.python312.withPackages (ps: with ps; [
-          pygobject3
-        ]);
 
         # Create a wrapper script that handles first-time setup
         setupScript = pkgs.writeScriptBin "yapper-setup" ''
@@ -42,12 +38,14 @@
           ];
 
           buildInputs = [
-            pythonEnv
             pkgs.openai-whisper-cpp
             pkgs.dotool
             pkgs.gtk4
             pkgs.gobject-introspection
             pkgs.gtk4.dev
+            pkgs.python312
+            pkgs.openai-whisper-cpp
+            pkgs.python312Packages.pygobject3
             setupScript
           ];
 
