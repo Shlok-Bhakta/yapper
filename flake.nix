@@ -14,6 +14,21 @@
         pythonEnv = pkgs.python312.withPackages (ps: with ps; [
           pygobject3
         ]);
+
+        # Create a wrapper script that handles first-time setup
+        setupScript = pkgs.writeScriptBin "yapper-setup" ''
+          #!/usr/bin/env bash
+          MODEL_DIR="$HOME/.local/share/yapper"
+          MODEL_PATH="$MODEL_DIR/base.en.bin"
+          
+          if [ ! -f "$MODEL_PATH" ]; then
+            echo "Downloading Whisper model for first-time setup..."
+            mkdir -p "$MODEL_DIR"
+            ${pkgs.openai-whisper-cpp}/bin/whisper-cpp-download-ggml-model base.en
+            mv base.en.bin "$MODEL_PATH"
+          fi
+        '';
+
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
@@ -23,7 +38,7 @@
 
           nativeBuildInputs = [
             pkgs.makeWrapper
-            pkgs.imagemagick # For converting SVG to PNG
+            pkgs.imagemagick
           ];
 
           buildInputs = [
@@ -33,6 +48,7 @@
             pkgs.gtk4
             pkgs.gobject-introspection
             pkgs.gtk4.dev
+            setupScript
           ];
 
           installPhase = ''
@@ -42,10 +58,6 @@
             mkdir -p $out/share/applications
             mkdir -p $out/share/icons/hicolor/scalable/apps
             mkdir -p $out/share/icons/hicolor/256x256/apps
-            
-            # Download the model during build
-            ${pkgs.openai-whisper-cpp}/bin/whisper-cpp-download-ggml-model base.en
-            mv ggml-base.en.bin $out/share/yapper/
 
             # Install the Python script
             cp yapper.py $out/share/yapper/
@@ -54,6 +66,20 @@
             cp yapper-icon.svg $out/share/icons/hicolor/scalable/apps/yapper.svg
             ${pkgs.imagemagick}/bin/convert yapper-icon.svg -resize 256x256 $out/share/icons/hicolor/256x256/apps/yapper.png
 
+            # Create launcher script
+            cat > $out/bin/yapper << EOF
+            #!/usr/bin/env bash
+            # Run setup script first
+            yapper-setup
+            
+            # Set model path
+            export WHISPER_MODEL="\$HOME/.local/share/yapper/base.en.bin"
+            
+            # Run the actual program
+            ${pythonEnv}/bin/python $out/share/yapper/yapper.py
+            EOF
+            chmod +x $out/bin/yapper
+
             # Create desktop entry
             cat > $out/share/applications/yapper.desktop << EOF
             [Desktop Entry]
@@ -61,23 +87,22 @@
             Type=Application
             Name=Yapper
             Comment=Audio Transcription Tool
-            Exec=yapper
+            Exec=$out/bin/yapper
             Icon=yapper
             Terminal=false
             Categories=Audio;Utility;Transcription;
             Keywords=audio;transcription;whisper;speech;
             EOF
             
-            # Create wrapper script
-            makeWrapper ${pythonEnv}/bin/python $out/bin/yapper \
-              --add-flags "$out/share/yapper/yapper.py" \
+            # Wrap the setup script
+            makeWrapper ${setupScript}/bin/yapper-setup $out/bin/yapper-setup \
+              --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp ]}
+
+            # Wrap the main script
+            wrapProgram $out/bin/yapper \
               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp pkgs.dotool ]} \
-              --set WHISPER_MODEL "$out/share/yapper/ggml-base.en.bin" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4}/lib/girepository-1.0" \
               --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0"
-
-            # Make the wrapper script executable
-            chmod +x $out/bin/yapper
           '';
 
           meta = with pkgs.lib; {
@@ -88,9 +113,9 @@
               command-line interface and a GTK-based graphical interface.
             '';
             homepage = "https://github.com/Shlok-Bhakta/yapper";
-            license = licenses.mit;  # Adjust according to your license
+            license = licenses.mit;
             platforms = platforms.linux;
-            maintainers = with maintainers; [ /* add your maintainer name here */ ];
+            maintainers = with maintainers; [ "Shlok Bhakta" ];
           };
         };
 
