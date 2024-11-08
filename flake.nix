@@ -46,7 +46,7 @@
                 pkgs.gtk4.dev
                 pkgs.python312
                 pkgs.python312Packages.pygobject3
-                pkgs.python312Packages.pygobject2
+                pkgs.python312Packages.pygobject-stubs
                 pkgs.graphene
                 setupScript
             ];
