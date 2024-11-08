@@ -4,31 +4,41 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
 
   outputs = { self, nixpkgs }: {
-    packages.x86_64-linux.defaultApp = let
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    in pkgs.mkShell {
-      name = "yapper";
-      buildInputs = [
-        pkgs.python312
-        pkgs.openai-whisper-cpp
-        pkgs.ydotool
-        pkgs.gtk4
-        pkgs.gobject-introspection
-        pkgs.gtk4.dev
-        pkgs.python312Packages.pygobject3
-      ];
+    packages = let
+      pkgs = nixpkgs.legacyPackages.${pkgs.system};
+    in {
+      default = pkgs.stdenv.mkDerivation {
+        pname = "yapper";
+        version = "1.0";
 
-      shellHook = ''
-        echo "Setting up Yapper environment..."
-        
-        # Download the Whisper model if not already present
-        if [ ! -f ggml-base.en.bin ]; then
-          whisper-cpp-download-ggml-model base.en
-        fi
+        src = ./.;
 
-        # Run the application
-        python yapper.py
-      '';
+        nativeBuildInputs = [
+          pkgs.python312
+          pkgs.openai-whisper-cpp
+          pkgs.ydotool
+          pkgs.gtk4
+          pkgs.gobject-introspection
+          pkgs.gtk4.dev
+          pkgs.python312Packages.pygobject3
+        ];
+
+        buildPhase = ''
+          echo "Setting up environment..."
+        '';
+
+        installPhase = ''
+          mkdir -p $out/bin
+          cp -r ${self}/yapper.py $out/bin/
+          cp -r ${self}/ggml-base.en.bin $out/bin/
+        '';
+
+        meta = with pkgs.lib; {
+          description = "A GUI for the whisper-cli tool";
+          license = licenses.mit;
+          maintainers = [ maintainers.shlok-bhakta ];
+        };
+      };
     };
   };
 }
