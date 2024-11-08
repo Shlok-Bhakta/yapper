@@ -11,7 +11,6 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        # Create a wrapper script that handles first-time setup
         setupScript = pkgs.writeScriptBin "yapper-setup" ''
           #!/usr/bin/env bash
           MODEL_DIR="$HOME/.local/share/yapper"
@@ -37,50 +36,40 @@
             pkgs.imagemagick
           ];
 
-            buildInputs = [
-                pkgs.openai-whisper-cpp
-                pkgs.dotool
-                pkgs.gtk4
-                pkgs.gobject-introspection
-                pkgs.gobject-introspection.dev  # Added here
-                pkgs.gtk4.dev
-                pkgs.python312
-                pkgs.python312Packages.pygobject3
-                pkgs.python312Packages.pygobject-stubs
-                pkgs.graphene
-                setupScript
-            ];
+          buildInputs = [
+            pkgs.openai-whisper-cpp
+            pkgs.dotool
+            pkgs.gtk4
+            pkgs.gobject-introspection
+            pkgs.gtk4.dev
+            pkgs.python312
+            pkgs.python312Packages.pygobject3
+            pkgs.graphene
+            setupScript
+          ];
 
           installPhase = ''
-            # Create necessary directories
             mkdir -p $out/bin
             mkdir -p $out/share/yapper
             mkdir -p $out/share/applications
             mkdir -p $out/share/icons/hicolor/scalable/apps
             mkdir -p $out/share/icons/hicolor/256x256/apps
 
-            # Install the Python script
+            # Install Python script and icons
             cp yapper.py $out/share/yapper/
-            
-            # Install icons
             cp yapper-icon.svg $out/share/icons/hicolor/scalable/apps/yapper.svg
             ${pkgs.imagemagick}/bin/convert yapper-icon.svg -resize 256x256 $out/share/icons/hicolor/256x256/apps/yapper.png
 
             # Create launcher script
             cat > $out/bin/yapper << EOF
             #!/usr/bin/env bash
-            # Run setup script first
             yapper-setup
             
-            # Set model path
             export WHISPER_MODEL="\$HOME/.local/share/yapper/ggml-base.en.bin"
-            
-            # Set up GObject Introspection environment
-            export GI_TYPELIB_PATH="${pkgs.gtk4}/lib/girepository-1.0:${pkgs.gtk4.dev}/lib/girepository-1.0:\$GI_TYPELIB_PATH"
-            export LD_LIBRARY_PATH="${pkgs.gtk4}/lib:${pkgs.gtk4.dev}/lib:\$LD_LIBRARY_PATH"
+            export GI_TYPELIB_PATH="${pkgs.gtk4}/lib/girepository-1.0:${pkgs.gobject-introspection}/lib/girepository-1.0:${pkgs.gtk4.dev}/lib/girepository-1.0:${pkgs.graphene}/lib/girepository-1.0:\$GI_TYPELIB_PATH"
+            export LD_LIBRARY_PATH="${pkgs.gtk4}/lib:${pkgs.gtk4.dev}/lib:${pkgs.gobject-introspection}/lib:${pkgs.graphene}/lib:\$LD_LIBRARY_PATH"
             export XDG_DATA_DIRS="${pkgs.gtk4}/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:\$XDG_DATA_DIRS"
             
-            # Run the actual program
             ${pkgs.python312}/bin/python $out/share/yapper/yapper.py
             EOF
             chmod +x $out/bin/yapper
@@ -98,7 +87,7 @@
             Categories=Audio;Utility;Transcription;
             Keywords=audio;transcription;whisper;speech;
             EOF
-            
+
             # Wrap the setup script
             makeWrapper ${setupScript}/bin/yapper-setup $out/bin/yapper-setup \
                 --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.openai-whisper-cpp ]}
@@ -110,14 +99,12 @@
                 --prefix GI_TYPELIB_PATH : "${pkgs.gtk4.dev}/lib/girepository-1.0" \
                 --prefix GI_TYPELIB_PATH : "${pkgs.graphene}/lib/girepository-1.0" \
                 --prefix GI_TYPELIB_PATH : "${pkgs.gobject-introspection}/lib/girepository-1.0" \
-                --prefix GI_TYPELIB_PATH : "${pkgs.gobject-introspection.dev}/lib/girepository-1.0" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4}/lib" \
                 --prefix LD_LIBRARY_PATH : "${pkgs.gtk4.dev}/lib" \
                 --prefix XDG_DATA_DIRS : "${pkgs.gtk4}/share" \
                 --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
                 --set PYTHONPATH "${pkgs.python312Packages.pygobject3}/${pkgs.python312.sitePackages}:$PYTHONPATH"
-
-            '';
+          '';
 
           meta = with pkgs.lib; {
             description = "A Python-based audio transcription application using whisper.cpp";
