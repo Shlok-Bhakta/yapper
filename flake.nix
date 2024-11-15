@@ -13,30 +13,31 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            config.allowUnfree = true;
+            config = {
+              allowUnfree = true;
+              cudaSupport = true;
+            };
           };
 
           pythonEnv = pkgs.python312.withPackages (ps: with ps; [
             pygobject3
-            # Add other Python dependencies here
           ]);
-
-          setupScript = pkgs.writeScriptBin "yapper-setup" ''
-            #!/usr/bin/env bash
-            MODEL_DIR="$HOME/.local/share/yapper"
-            MODEL_PATH="$MODEL_DIR/ggml-base.en.bin"
-
-            if [ ! -f "$MODEL_PATH" ]; then
-              echo "Downloading Whisper model for first-time setup..."
-              mkdir -p "$MODEL_DIR"
-              ${pkgs.openai-whisper-cpp}/bin/whisper-cpp-download-ggml-model base.en
-              mv ggml-base.en.bin "$MODEL_PATH"
-            fi
-          '';
 
           whisperWithCuda = pkgs.openai-whisper-cpp.override {
             cudaSupport = true;
           };
+
+          setupScript = pkgs.writeScriptBin "yapper-setup" ''
+            #!/usr/bin/env bash
+            CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/yapper"
+            mkdir -p "$CONFIG_DIR"
+            
+            if [ ! -f "$CONFIG_DIR/ggml-base.en.bin" ]; then
+              echo "Downloading Whisper model for first-time setup..."
+              cd "$CONFIG_DIR"
+              ${whisperWithCuda}/bin/whisper-cpp-download-ggml-model base.en
+            fi
+          '';
         in
         {
           packages.default = pkgs.stdenv.mkDerivation {
@@ -59,6 +60,8 @@
               pkgs.gobject-introspection
               pkgs.gtk4.dev
               setupScript
+              pkgs.cudatoolkit
+              pkgs.linuxPackages.nvidia_x11
             ];
 
             installPhase = ''
@@ -74,15 +77,23 @@
 
               cat > $out/bin/yapper << EOF
               #!${pkgs.bash}/bin/bash
+              export CUDA_PATH="${pkgs.cudatoolkit}"
+              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [
+                pkgs.linuxPackages.nvidia_x11
+                pkgs.cudatoolkit
+              ]}"
+              export EXTRA_LDFLAGS="-L/lib -L${pkgs.linuxPackages.nvidia_x11}/lib"
+              export __NV_PRIME_RENDER_OFFLOAD=1
+              export __GLX_VENDOR_LIBRARY_NAME="nvidia"
               ${setupScript}/bin/yapper-setup
-              exec ${pythonEnv}/bin/python $out/share/yapper/yapper.py
+              exec ${pythonEnv}/bin/python $out/share/yapper/yapper.py "\$@"
               EOF
               chmod +x $out/bin/yapper
 
               wrapProgram $out/bin/yapper \
                 --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
                 --prefix PYTHONPATH : "${pythonEnv}/${pythonEnv.sitePackages}" \
-                --prefix PATH : ${pkgs.lib.makeBinPath [ setupScript ]}
+                --prefix PATH : ${pkgs.lib.makeBinPath [ setupScript whisperWithCuda pkgs.cudatoolkit ]}
 
               cat > $out/share/applications/yapper.desktop << EOF
               [Desktop Entry]

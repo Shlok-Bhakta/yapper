@@ -5,9 +5,13 @@ import subprocess
 import threading
 from multiprocessing import Value
 import signal
+import os
 
+def get_model_path():
+    config_dir = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
+    return os.path.join(config_dir, 'yapper', 'ggml-base.en.bin')
 # Constants for Whisper model and settings
-MODEL_PATH = "ggml-base.en.bin"
+MODEL_PATH = get_model_path()
 RATE = 16000
 CHUNK = 256
 
