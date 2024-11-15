@@ -6,14 +6,14 @@ https://github.com/user-attachments/assets/dfa57316-8f05-484d-ac5d-91f51a0af948
 Welcome to my project, **Yapper**! It's a super simple speech-to-text application, so that's why it's a little derpy lol. The project is just a 200-line Python script written by Claude and ChatGPT. Its pretty much a minimal GTK wrapper for [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp). Also thank you so much to [SeungheonOh](https://github.com/SeungheonOh) for helping me with the nix flake!
 
 ## Requirements
-NixOS System (works on other distros please make an issue and ill try my best to help)
-Tested Only on Hyprland
-Nvidia GPU With CUDA Support on a System Level (nvidia-smi shows CUDA support)
+- NixOS System (works on other distros please make an issue and ill try my best to help)
+- Tested Only on Hyprland
+- Nvidia GPU With CUDA Support on a System Level (nvidia-smi shows CUDA support)
 (make an issue if you want to use this without an Nvidia GPU ill try my best to help)
 
 ## Description
 
-The idea behind Yapper is simple: I wanted to click a button, speak into my microphone, and have everything transcribed automatically using GPT's Whisper model. It works fairly well, though it's a bit slow, so don’t expect too much. If there are bugs, I probably can’t fix them right away (do leave an issue though), but I will patch any that I run into personally. 
+The idea behind Yapper is simple: I wanted to click a button, speak into my microphone, and have everything transcribed automatically using GPT's Whisper model. It works fairly well, though it's ~~bit slow~~ pretty fast with cuda now, so don’t expect too much. If there are bugs, I probably can’t fix them right away (do leave an issue though), but I will patch any that I run into personally.   
 
 Here’s the flow:
 1. Speak into the microphone.
@@ -26,7 +26,6 @@ In the end, you have your thoughts and ideas—just dictated instead of typed ou
 
 - Speech-to-text transcription using Whisper
 - Use ChatGPT to refine your transcriptions
-- Works (kind of) but don’t expect much support!
 
 ## Installation
 
