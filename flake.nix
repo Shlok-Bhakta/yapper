@@ -6,17 +6,20 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs =
-    inputs@{ flake-parts, nixpkgs, ... }:
+  outputs = inputs@{ flake-parts, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
-      perSystem =
-        { system, ... }:
+      perSystem = { system, ... }:
         let
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
           };
+
+          pythonEnv = pkgs.python312.withPackages (ps: with ps; [
+            pygobject3
+            # Add other Python dependencies here
+          ]);
 
           setupScript = pkgs.writeScriptBin "yapper-setup" ''
             #!/usr/bin/env bash
@@ -45,16 +48,17 @@
               pkgs.makeWrapper
               pkgs.imagemagick
               pkgs.gobject-introspection
+              pkgs.wrapGAppsHook
             ];
 
             buildInputs = [
-              pkgs.python312
+              pythonEnv
               whisperWithCuda
               pkgs.wtype
               pkgs.gtk4
               pkgs.gobject-introspection
               pkgs.gtk4.dev
-              pkgs.python312Packages.pygobject3
+              setupScript
             ];
 
             installPhase = ''
@@ -64,21 +68,22 @@
               mkdir -p $out/share/icons/hicolor/scalable/apps
               mkdir -p $out/share/icons/hicolor/256x256/apps
 
-              # Install Python script and icons
               cp yapper.py $out/share/yapper/
               cp yapper-icon.svg $out/share/icons/hicolor/scalable/apps/yapper.svg
               ${pkgs.imagemagick}/bin/convert yapper-icon.svg -resize 256x256 $out/share/icons/hicolor/256x256/apps/yapper.png
 
-              # Create launcher script
               cat > $out/bin/yapper << EOF
-              #!/usr/bin/env bash
-              yapper-setup
-
-              ${pkgs.python312}/bin/python $out/share/yapper/yapper.py
+              #!${pkgs.bash}/bin/bash
+              ${setupScript}/bin/yapper-setup
+              exec ${pythonEnv}/bin/python $out/share/yapper/yapper.py
               EOF
               chmod +x $out/bin/yapper
 
-              # Create desktop entry
+              wrapProgram $out/bin/yapper \
+                --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
+                --prefix PYTHONPATH : "${pythonEnv}/${pythonEnv.sitePackages}" \
+                --prefix PATH : ${pkgs.lib.makeBinPath [ setupScript ]}
+
               cat > $out/share/applications/yapper.desktop << EOF
               [Desktop Entry]
               Version=1.0
@@ -92,14 +97,6 @@
               Keywords=audio;transcription;whisper;speech;
               EOF
             '';
-
-            meta = with pkgs.lib; {
-              description = "A Python-based audio transcription application using whisper.cpp";
-              homepage = "https://github.com/Shlok-Bhakta/yapper";
-              license = licenses.mit;
-              platforms = platforms.linux;
-              maintainers = with maintainers; [ "Shlok Bhakta" ];
-            };
           };
         };
     };
