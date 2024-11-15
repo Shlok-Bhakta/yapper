@@ -3,7 +3,13 @@
 https://github.com/user-attachments/assets/dfa57316-8f05-484d-ac5d-91f51a0af948
 
 
-Welcome to my project, **Yapper**! It's a super simple speech-to-text application, so that's why it's a little derpy lol. The project is just a 200-line Python script written by Claude and ChatGPT. Its pretty much a minimal GTK wrapper for [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp)
+Welcome to my project, **Yapper**! It's a super simple speech-to-text application, so that's why it's a little derpy lol. The project is just a 200-line Python script written by Claude and ChatGPT. Its pretty much a minimal GTK wrapper for [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp). Also thank you so much to [SeungheonOh](https://github.com/SeungheonOh) for helping me with the nix flake!
+
+## Requirements
+NixOS System (works on other distros please make an issue and ill try my best to help)
+Tested Only on Hyprland
+Nvidia GPU With CUDA Support on a System Level (nvidia-smi shows CUDA support)
+(make an issue if you want to use this without an Nvidia GPU ill try my best to help)
 
 ## Description
 
@@ -26,7 +32,32 @@ In the end, you have your thoughts and ideas—just dictated instead of typed ou
 
 Since I’m on NixOS, I’ll leave a guide for how to install this on NixOS here. If you want to style it like mine, I’ve set it up with the Catppuccin theme. I’ll figure out how to share that too.
 
-This is currently on the backburner, building this thing has made me want to oof myself so if anyone can figure out how to make this installation work please lmk!
+Thanks to [SeungheonOh](https://github.com/SeungheonOh)
+
+Add the following to your `flake.nix`
+```nix
+    inputs = {
+        ...
+        yapper = {
+            url = "github:Shlok-Bhakta/yapper";
+            inputs.nixpkgs.follows = "nixpkgs"; # optional
+        };
+        ...
+    };
+```
+
+In your `home.nix` add the following
+```nix
+    home.packages = [
+        ...
+        inputs.yapper.packages."${pkgs.system}".default
+        ...
+    ];
+```
+
+rebuild your system and enjoy!
+
+If you have any questions feel free to open an issue and ill try my best to help!
 
 ## Contributing
 
@@ -58,7 +89,6 @@ run
 ```bash
 nix-shell
 ```
-
 run
 ```bash
 whisper-cpp-download-ggml-model base.en
@@ -75,4 +105,4 @@ MIT License. See the [LICENSE](LICENSE) file for more information.
 
 ---
 
-Thank you for coming to my TED Talk! 🎤
+Thank you for coming to my TED Talk! 🎤 and again, thank you to [SeungheonOh](https://github.com/SeungheonOh) for helping me out!
