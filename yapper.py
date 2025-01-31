@@ -41,8 +41,8 @@ def type_text(text):
         print(f"Error using dotool: {e}")
 
 def transcribe_audio(mic_id, stop_flag):
-    """Run whisper-cpp-stream with the selected microphone and clean output."""
     global is_transcribing, whisper_process
+    buffer = ""
     try:
         command = ["whisper-cpp-stream", "-m", MODEL_PATH, "-c", str(mic_id)]
         whisper_process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
@@ -52,10 +52,32 @@ def transcribe_audio(mic_id, stop_flag):
                 break
             if line.strip() and not any(x in line for x in ["[", "]", "(", "action", "init:"]):
                 cleaned_text = line.strip()
-                GLib.idle_add(type_text, cleaned_text)
+                buffer += " " + cleaned_text
+                buffer = buffer.lstrip()
+
+                # Sentence boundary detection
+                while True:
+                    last_punct = max(
+                        buffer.rfind('.'),
+                        buffer.rfind('!'),
+                        buffer.rfind('?'),
+                        buffer.rfind(':')  # For question/answer patterns
+                    )
+                    
+                    # Minimum sentence length check to avoid premature sending
+                    if last_punct != -1 and last_punct >= 3:  # At least 3-character sentences
+                        sentence = buffer[:last_punct+1]
+                        remaining = buffer[last_punct+1:].lstrip()
+                        GLib.idle_add(type_text, sentence)
+                        buffer = remaining
+                    else:
+                        break
     except Exception as e:
         print(f"Error in transcription process: {e}")
     finally:
+        # Flush remaining buffer
+        if buffer.strip():
+            GLib.idle_add(type_text, buffer.strip())
         if whisper_process and whisper_process.poll() is None:
             whisper_process.send_signal(signal.SIGINT)
             whisper_process.wait()
