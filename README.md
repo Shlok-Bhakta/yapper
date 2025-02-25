@@ -1,6 +1,7 @@
 # Yapper
 
-https://github.com/user-attachments/assets/dfa57316-8f05-484d-ac5d-91f51a0af948
+
+https://github.com/user-attachments/assets/30fa007c-0fb3-4075-9151-1f99d90756e5
 
 
 Welcome to my project, **Yapper**! It's a super simple speech-to-text application, so that's why it's a little derpy lol. The project is just a 200-line Python script written by Claude and ChatGPT. Its pretty much a minimal GTK wrapper for [openai-whisper-cpp](https://github.com/ggerganov/whisper.cpp). Also thank you so much to [SeungheonOh](https://github.com/SeungheonOh) for helping me with the nix flake!
